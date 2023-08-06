@@ -18,4 +18,4 @@ docker cp ffmpeg-buildmaster:/root/ffmpeg_bin/. "$bin_dir" &&
 docker stop ffmpeg-buildmaster &&
 docker rm -f ffmpeg-buildmaster &&
 docker rmi -f ffmpeg-buildmaster saichaithanya/ffmpeg-build-toolchain:v1 &&
-python3 "$bin_dir"/test.py
+python3 "$(pwd)"/test.py
