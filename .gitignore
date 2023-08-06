@@ -1,0 +1,2 @@
+#ignore build ffmpeg binaries
+ffmpeg_bin/
