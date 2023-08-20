@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-bin_dir=$(pwd)/ffmpeg_bin
+bin_dir=$(pwd)/tests/ffmpeg_bin
 rm -rf "$bin_dir"
 mkdir -p "$bin_dir" 
 if [[ "$(docker images -q saichaithanya/ffmpeg-build-toolchain:v1 2> /dev/null)" == "" ]]; then
@@ -18,4 +18,4 @@ docker cp ffmpeg-buildmaster:/root/ffmpeg_bin/. "$bin_dir" &&
 docker stop ffmpeg-buildmaster &&
 docker rm -f ffmpeg-buildmaster &&
 docker rmi -f ffmpeg-buildmaster saichaithanya/ffmpeg-build-toolchain:v1 &&
-python3 "$(pwd)"/test.py
+python3 "$(pwd)"/tests/test.py
