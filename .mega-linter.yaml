@@ -1,0 +1,6 @@
+APPLY_FIXES: none
+IGNORE_GITIGNORED_FILES: true
+ENABLE: PYTHON,BASH,DOCKERFILE,MARKDOWN
+FILTER_REGEX_INCLUDE: '(README\.md|test\.py|trigger\.sh|build-tools/Dockerfile|buildmaster/Dockerfile)'
+FILTER_REGEX_EXCLUDE: '(venv/*|env/*)'
+SHOW_ELAPSED_TIME: true
