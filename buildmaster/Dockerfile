@@ -8,9 +8,9 @@ RUN mkdir /root/custom_build /root/ffmpeg_bin/ /root/ffmpeg_src /root/lame_src
 RUN wget -q -nv https://ffmpeg.org/releases/ffmpeg-${FFMPEG_VERSION}.tar.xz -O /root/ffmpeg_src.tar.xz \
   && tar xf /root/ffmpeg_src.tar.xz -C /root/ffmpeg_src --strip-components 1 \
   && rm -rf /root/ffmpeg_src.tar.xz
-RUN wget -q -nv https://sourceforge.net/projects/lame/files/latest/download -O /root/lame_src.tar.gz \
+RUN wget -q -nv https://downloads.sourceforge.net/lame/lame-3.100.tar.gz -O /root/lame_src.tar.gz \
   && tar xf /root/lame_src.tar.gz -C /root/lame_src --strip-components 1 \
-  && rm -rf /root/ffmpeg_src.tar.xz
+  && rm -rf /root/lame_src.tar.gz
 #win-build
 WORKDIR /root/lame_src
 RUN ./configure --host=x86_64-w64-mingw32 --prefix=/root/custom_build \
