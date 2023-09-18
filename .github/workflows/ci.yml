@@ -1,0 +1,128 @@
+name: CI
+
+on:
+  push:
+    branches: [ "master", "dev"]
+  pull_request:
+    branches: [ "master", "dev"]
+  
+  workflow_dispatch:
+
+
+jobs:
+  megalinter:
+    name: MegaLinter
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PAT || secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: MegaLinter
+        uses: oxsecurity/megalinter@v7
+        env:
+          VALIDATE_ALL_CODEBASE: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Archive production artifacts
+        if: ${{ success() }} || ${{ failure() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: MegaLinter reports
+          path: |
+            megalinter-reports
+            mega-linter.log
+
+  build:
+    name: Docker build ffmpeg binaries
+    runs-on: ubuntu-latest
+    needs: megalinter
+    steps:
+    - name: Checkout code 
+      uses: actions/checkout@v3
+
+    - name: Build ffmpeg binaries
+      run: |
+        chmod 744 ./trigger.sh
+        ./trigger.sh
+
+    - name: Save ffmpeg binaries
+      uses: actions/upload-artifact@v3
+      with:
+        name: ffmpeg-build-artifact
+        path: tests/ffmpeg_bin/
+        retention-days: 1 
+
+  test:
+    name: Test ffmpeg binaries
+    needs: build
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10' 
+
+      - name: Download ffmpeg binaries
+        uses: actions/download-artifact@v3
+        with:
+          name: ffmpeg-build-artifact
+          path: tests/ffmpeg_bin/
+      
+      - name: Grant Execute Permission
+        if: matrix.os != 'windows-latest'
+        run: |
+          chmod 777 ./tests/ffmpeg_bin/*
+          
+      - name: Test ffmpeg binaries 
+        run: python ./tests/test.py
+
+  release:
+    name: release
+    needs: test
+    runs-on: ubuntu-latest
+    if: ${{ github.ref != 'refs/heads/dev' }}
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Download ffmpeg binaries
+        uses: actions/download-artifact@v3
+        with:
+          name: ffmpeg-build-artifact
+          path: tests/ffmpeg_bin/
+
+      - name: Extract latest Changelog
+        run: echo -e "### Changelog\n$(awk -v RS= 'NR==3' CHANGELOG.md)" >> ${{ github.workspace }}-LATEST_CHANGELOG.txt
+
+      - name: Extract latest Tag
+        shell: bash
+        run: echo "TAG_NAME=$(awk -F ' ' '{print $2}' ./CHANGELOG.md | head -n 1)" >> $GITHUB_OUTPUT
+        id: tag
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            tests/ffmpeg_bin/ffmpeg_android_aarch64
+            tests/ffmpeg_bin/ffmpeg_darwin_x86_64
+            tests/ffmpeg_bin/ffmpeg_linux_x86_64
+            tests/ffmpeg_bin/ffmpeg_darwin_arm64
+            tests/ffmpeg_bin/ffmpeg_linux_aarch64
+            tests/ffmpeg_bin/ffmpeg_windows_amd64.exe
+          name: ${{ steps.tag.outputs.TAG_NAME }}
+          tag_name: ${{ steps.tag.outputs.TAG_NAME }}
+          body_path: ${{ github.workspace }}-LATEST_CHANGELOG.txt
