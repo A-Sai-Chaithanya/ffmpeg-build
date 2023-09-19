@@ -4,7 +4,7 @@ from os import listdir
 from os import path as os_path
 from os import remove
 from platform import machine, system
-from subprocess import PIPE, STDOUT, Popen
+from subprocess import PIPE, STDOUT, Popen  # nosec
 
 
 def proc_exec(cmd, logger):
@@ -17,7 +17,7 @@ def proc_exec(cmd, logger):
     Raises:
         Exception: Process Failure
     """
-    process = Popen(
+    process = Popen(  # nosec
         cmd, stdout=PIPE, stderr=STDOUT, universal_newlines=True, encoding="utf8"
     )
     out, err = process.communicate()
