@@ -26,10 +26,10 @@ RUN git clone 'https://github.com/Zeranoe/mingw-w64-build.git' \
   /root/.zeranoe/mingw-w64/x86_64/libexec/gcc/x86_64-w64-mingw32/12.3.1/liblto_plugin.so \
   /root/.zeranoe/mingw-w64/x86_64/lib/bfd-plugins/
 RUN git clone 'https://github.com/tpoechtrager/osxcross.git' \
-  && wget -P /osxcross/tarballs/ 'https://github.com/alexey-lysiuk/macos-sdk/releases/download/12.3/MacOSX12.3.tar.xz' \
+  && wget -q -nv -P /osxcross/tarballs/ 'https://github.com/alexey-lysiuk/macos-sdk/releases/download/12.3/MacOSX12.3.tar.xz' \
   && UNATTENDED=1 /osxcross/build_clang.sh && make -C "/osxcross/build/build_stage" install \
   && TARGET_DIR=/usr/local/osxcross UNATTENDED=1 /osxcross/build.sh \
   && rm -rf /osxcross /tmp/* ~/.cache/
-RUN wget "https://dl.google.com/android/repository/android-ndk-r${ANDROID_NDK_VERSION}-linux.zip" \
+RUN wget -q -nv "https://dl.google.com/android/repository/android-ndk-r${ANDROID_NDK_VERSION}-linux.zip" \
   && unzip /android-ndk-r${ANDROID_NDK_VERSION}-linux.zip \
   && rm -f /android-ndk-r${ANDROID_NDK_VERSION}-linux.zip

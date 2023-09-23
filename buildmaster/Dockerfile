@@ -1,12 +1,16 @@
 FROM saichaithanya/ffmpeg-build-toolchain:v1
-ENV FFMPEG_VERSION="6.0"
+ENV FFMPEG_VERSION "6.0"
+ENV DECODER 'aac,opus,vorbis,mjpeg,mp3'
+ENV DEMUXER 'mov,matroska,image2,mp3'
+ENV MUXER 'mp3,mp4,webm,null'
+ENV PARSER 'vorbis,opus,vp9,vp8,aac,mjpeg,h264'
 RUN mkdir /root/custom_build /root/ffmpeg_bin/ /root/ffmpeg_src /root/lame_src
-RUN wget https://ffmpeg.org/releases/ffmpeg-${FFMPEG_VERSION}.tar.xz -O /root/ffmpeg_src.tar.xz \
+RUN wget -q -nv https://ffmpeg.org/releases/ffmpeg-${FFMPEG_VERSION}.tar.xz -O /root/ffmpeg_src.tar.xz \
   && tar xf /root/ffmpeg_src.tar.xz -C /root/ffmpeg_src --strip-components 1 \
   && rm -rf /root/ffmpeg_src.tar.xz
-RUN wget https://sourceforge.net/projects/lame/files/latest/download -O /root/lame_src.tar.gz \
+RUN wget -q -nv https://downloads.sourceforge.net/lame/lame-3.100.tar.gz -O /root/lame_src.tar.gz \
   && tar xf /root/lame_src.tar.gz -C /root/lame_src --strip-components 1 \
-  && rm -rf /root/ffmpeg_src.tar.xz
+  && rm -rf /root/lame_src.tar.gz
 #win-build
 WORKDIR /root/lame_src
 RUN ./configure --host=x86_64-w64-mingw32 --prefix=/root/custom_build \
@@ -19,15 +23,13 @@ RUN ./configure --arch=x86_64 --target-os=mingw64 --disable-everything \
   --disable-network --disable-autodetect --enable-small --disable-debug \
   --disable-doc --disable-manpages --enable-static --disable-shared \
   --disable-podpages --disable-txtpages --disable-htmlpages \
-  --enable-decoder='aac*,ac3*,opus,vorbis,mjpeg,mp3' --enable-cross-compile \
-  --enable-demuxer='mov,m4v,matroska,image2,mp3' --enable-protocol=file \
-  --enable-muxer='mp3,mp4,webm,null' --enable-libmp3lame --enable-encoder=libmp3lame \
+  --enable-decoder=${DECODER} --enable-cross-compile --enable-parser=${PARSER} \
+  --enable-demuxer=${DEMUXER} --enable-protocol=file --pkg-config=PKG_CONFIG_PATH \
+  --enable-muxer=${MUXER} --enable-libmp3lame --enable-encoder=libmp3lame \
   --enable-filter=aresample --enable-logging --enable-w32threads --enable-lto \
-  --enable-parser='vorbis,opus,vp9,vp8,mpegaudio,mpegvideo,mpeg4video,ac3*,aac*,mjpeg,h264' \
   --disable-ffprobe --disable-ffplay --extra-cflags=-'I/root/custom_build/include -O3 -flto=4' \
   --cross-prefix=/root/.zeranoe/mingw-w64/x86_64/bin/x86_64-w64-mingw32- \
   --prefix=/root/custom_build --extra-ldflags=-'L/root/custom_build/lib' \
-  --pkg-config=PKG_CONFIG_PATH \
   && make -j 8 \
   && make install \
   && make clean && make distclean
@@ -44,14 +46,13 @@ WORKDIR /root/ffmpeg_src
 RUN ./configure --arch=x86_64 --target-os=linux --disable-everything \
   --disable-network --disable-autodetect --enable-small --disable-debug \
   --disable-doc --disable-manpages --enable-static --disable-shared \
-  --disable-podpages --enable-decoder='aac*,ac3*,opus,vorbis,mjpeg,mp3' \
-  --enable-demuxer='mov,m4v,matroska,image2,mp3' --enable-protocol=file \
-  --enable-muxer='mp3,mp4,webm,null' --enable-libmp3lame --enable-encoder=libmp3lame \
+  --disable-podpages --enable-decoder=${DECODER} --enable-parser=${PARSER} \
+  --enable-demuxer=${DEMUXER} --enable-protocol=file --disable-txtpages \
+  --enable-muxer=${MUXER} --enable-libmp3lame --enable-encoder=libmp3lame \
   --enable-filter=aresample --enable-logging --enable-pthreads --enable-lto \
-  --enable-parser='vorbis,opus,vp9,vp8,mpegaudio,mpegvideo,mpeg4video,ac3*,aac*,mjpeg,h264' \
   --disable-ffprobe --disable-ffplay --extra-cflags=-'I/root/custom_build/include -O3 -flto=4' \
   --prefix=/root/custom_build --extra-ldflags=-'L/root/custom_build/lib' \
-  --disable-txtpages --disable-htmlpages \
+  --disable-htmlpages \
   && make -j 8 \
   && make install \
   && make clean && make distclean
@@ -72,14 +73,13 @@ WORKDIR /root/ffmpeg_src
 RUN ./configure --arch=aarch64 --target-os=linux --disable-everything \
   --disable-network --disable-autodetect --enable-small --disable-debug \
   --disable-doc --disable-manpages --enable-static --disable-shared \
-  --disable-podpages --enable-decoder='aac*,ac3*,opus,vorbis,mjpeg,mp3' \
-  --enable-demuxer='mov,m4v,matroska,image2,mp3' --enable-protocol=file \
-  --enable-muxer='mp3,mp4,webm,null' --enable-libmp3lame --enable-encoder=libmp3lame \
+  --disable-podpages --enable-decoder=${DECODER} --enable-parser=${PARSER} \
+  --enable-demuxer=${DEMUXER} --enable-protocol=file --disable-txtpages \
+  --enable-muxer=${MUXER} --enable-libmp3lame --enable-encoder=libmp3lame \
   --enable-filter=aresample --enable-logging --enable-pthreads --enable-lto \
-  --enable-parser='vorbis,opus,vp9,vp8,mpegaudio,mpegvideo,mpeg4video,ac3*,aac*,mjpeg,h264' \
   --disable-ffprobe --disable-ffplay --extra-cflags=-'I/root/custom_build/include -O3 -flto=4' \
   --prefix=/root/custom_build --extra-ldflags=-'L/root/custom_build/lib' \
-  --disable-txtpages --disable-htmlpages --cross-prefix=aarch64-linux-gnu- \
+  --disable-htmlpages --cross-prefix=aarch64-linux-gnu- \
   && make -j 8 \
   && make install \
   && make clean && make distclean
@@ -97,11 +97,10 @@ WORKDIR /root/ffmpeg_src
 RUN ./configure --arch=x86_64 --target-os=darwin --enable-cross-compile \
   --disable-everything --disable-network --disable-autodetect \ 
   --enable-small --disable-txtpages  --disable-shared --enable-static \
-  --enable-decoder='aac*,ac3*,opus,vorbis,mjpeg,mp3' --disable-podpages \
-  --enable-demuxer='mov,m4v,matroska,image2,mp3' --enable-protocol=file \
-  --enable-muxer='mp3,mp4,webm,null' --enable-libmp3lame --enable-encoder=libmp3lame \
+  --enable-decoder=${DECODER} --disable-podpages --enable-parser=${PARSER} \
+  --enable-demuxer=${DEMUXER} --enable-protocol=file \
+  --enable-muxer=${MUXER} --enable-libmp3lame --enable-encoder=libmp3lame \
   --enable-filter=aresample --enable-logging --enable-pthreads \
-  --enable-parser='vorbis,opus,vp8,vp9,mjpeg,h264,aac*,ac3*,mpegvideo,mpegaudio,mpeg4video' \
   --disable-ffprobe --disable-ffplay --prefix='/root/custom_build/' \
   --extra-cflags=-"I/root/custom_build/include -O3" --disable-manpages \
   --extra-ldflags="-L/root/custom_build/lib" --disable-doc \
@@ -124,11 +123,10 @@ WORKDIR /root/ffmpeg_src
 RUN ./configure --arch=aarch64 --target-os=darwin --enable-cross-compile \
   --disable-everything --disable-network --disable-autodetect --enable-small \
   --disable-htmlpages --disable-shared --enable-static --disable-debug \
-  --enable-decoder='aac*,ac3*,opus,vorbis,mjpeg,mp3' --disable-txtpages \
-  --enable-demuxer='mov,m4v,matroska,image2,mp3' --enable-protocol=file \
-  --enable-muxer='mp3,mp4,webm,null' --enable-libmp3lame --enable-encoder=libmp3lame \
+  --enable-decoder=${DECODER} --disable-txtpages --enable-parser=${PARSER} \
+  --enable-demuxer=${DEMUXER} --enable-protocol=file \
+  --enable-muxer=${MUXER} --enable-libmp3lame --enable-encoder=libmp3lame \
   --enable-filter=aresample --enable-logging --enable-pthreads \
-  --enable-parser='vorbis,opus,vp8,vp9,mjpeg,h264,aac*,ac3*,mpegvideo,mpegaudio,mpeg4video' \
   --disable-ffprobe --disable-ffplay --prefix='/root/custom_build/' \
   --extra-cflags=-"I/root/custom_build/include -O3" \
   --extra-ldflags="-L/root/custom_build/lib" --disable-podpages \
@@ -151,11 +149,10 @@ WORKDIR /root/ffmpeg_src
 RUN ./configure --arch=aarch64 --target-os=android --enable-cross-compile \
   --disable-everything --disable-network --disable-autodetect --enable-small \
   --disable-debug --disable-txtpages  --disable-shared --enable-static \
-  --enable-decoder='aac*,ac3*,opus,vorbis,mjpeg,mp3' --disable-htmlpages \
-  --enable-demuxer='mov,m4v,matroska,image2,mp3' --enable-protocol=file \
-  --enable-muxer='mp3,mp4,webm,null' --enable-libmp3lame --enable-encoder=libmp3lame \
-  --enable-filter=aresample --enable-logging --enable-pthreads --disable-doc \
-  --enable-parser='vorbis,opus,vp8,vp9,mjpeg,h264,aac*,ac3*,mpegvideo,mpegaudio,mpeg4video' \ 
+  --enable-decoder=${DECODER} --disable-htmlpages --enable-parser=${PARSER} \
+  --enable-demuxer=${DEMUXER} --enable-protocol=file \
+  --enable-muxer=${MUXER} --enable-libmp3lame --enable-encoder=libmp3lame \
+  --enable-filter=aresample --enable-logging --enable-pthreads --disable-doc \ 
   --disable-ffprobe --disable-ffplay --prefix='/root/custom_build/' \
   --extra-cflags="-I/root/custom_build/include -O3 -I${ANDROID_INCLUDE}" --disable-manpages \
   --extra-ldflags="-L/root/custom_build/lib -L${ANDROID_LIB}" --disable-podpages \

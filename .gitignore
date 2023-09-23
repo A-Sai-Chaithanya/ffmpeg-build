@@ -1,2 +1,15 @@
 #ignore build ffmpeg binaries
 ffmpeg_bin/
+
+#ignore logs
+*.log
+
+#ignore venv
+venv/
+env/
+
+#ignore cache
+*cache
+
+#ignore megalinter files
+megalinter-reports/
